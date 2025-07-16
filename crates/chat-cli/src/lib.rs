@@ -7,6 +7,7 @@ pub mod auth;
 pub mod aws_common;
 pub mod cli;
 pub mod database;
+pub mod jsonrpc_server;
 pub mod logging;
 pub mod mcp_client;
 pub mod os;
