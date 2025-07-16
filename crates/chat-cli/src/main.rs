@@ -3,6 +3,7 @@ mod auth;
 mod aws_common;
 mod cli;
 mod database;
+mod jsonrpc_server;
 mod logging;
 mod mcp_client;
 mod os;

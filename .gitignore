@@ -33,7 +33,6 @@ book/
 .vscode-test/
 
 # ide folders
-.vscode/
 .fleet/
 .idea/
 
