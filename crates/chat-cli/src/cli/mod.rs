@@ -205,7 +205,7 @@ impl Cli {
 
         // Start JSON-RPC server in background for IDE integration
         let (rpc_server, mut rx) = crate::jsonrpc_server::JsonRpcServer::new();
-        
+
         if rpc_server.start(3030).is_ok() {
             tokio::spawn(async move {
                 while let Some(message) = rx.recv().await {

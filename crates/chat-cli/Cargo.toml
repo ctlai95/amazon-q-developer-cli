@@ -121,8 +121,7 @@ webpki-roots.workspace = true
 whoami.workspace = true
 winnow.workspace = true
 schemars.workspace = true
-jsonrpc-core.workspace = true
-jsonrpc-http-server.workspace = true
+warp.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 nix.workspace = true
