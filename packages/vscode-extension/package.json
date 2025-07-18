@@ -19,12 +19,23 @@
       {
         "command": "amazonq.sendActiveFile",
         "title": "Send Active File to Amazon Q CLI"
+      },
+      {
+        "command": "amazonq.sendSelectedCode",
+        "title": "Send Selected Code to Amazon Q CLI"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "amazonq.openCLI",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "amazonq.sendSelectedCode",
+          "when": "editorHasSelection",
           "group": "navigation"
         }
       ]

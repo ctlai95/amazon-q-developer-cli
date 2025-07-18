@@ -80,11 +80,7 @@ struct JsonRpcRequest {
 }
 
 impl JsonRpcServer {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn start(&self, port: u16) -> Result<()> {
+    pub fn start(port: u16) -> Result<()> {
         let rpc = warp::path::end().and(warp::post()).and(warp::body::json()).and_then(
             move |req: JsonRpcRequest| async move {
                 if req.method == "update_editor_state" {

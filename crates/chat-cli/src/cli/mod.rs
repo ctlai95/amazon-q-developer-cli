@@ -204,8 +204,7 @@ impl Cli {
         let subcommand = self.subcommand.unwrap_or_default();
 
         // Start JSON-RPC server in background for IDE integration
-        let rpc_server = crate::jsonrpc_server::JsonRpcServer::new();
-        let _ = rpc_server.start(3030);
+        let _ = crate::jsonrpc_server::JsonRpcServer::start(3030);
 
         // Initialize our logger and keep around the guard so logging can perform as expected.
         let _log_guard = initialize_logging(LogArgs {
