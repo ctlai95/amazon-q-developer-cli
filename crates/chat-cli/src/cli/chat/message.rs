@@ -36,6 +36,7 @@ use crate::api_client::model::{
     ToolUse,
     UserInputMessage,
     UserInputMessageContext,
+    EditorState,
 };
 
 const USER_ENTRY_START_HEADER: &str = "--- USER MESSAGE BEGIN ---\n";
@@ -192,6 +193,7 @@ impl UserMessage {
                 .to_string(),
             user_input_message_context: Some(UserInputMessageContext {
                 env_state: self.env_context.env_state,
+                editor_state: self.env_context.editor_state,
                 tool_results: match self.content {
                     UserMessageContent::CancelledToolUses { tool_use_results, .. }
                     | UserMessageContent::ToolUseResults { tool_use_results } => {
@@ -365,12 +367,14 @@ impl From<InvokeOutput> for ToolUseResultBlock {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserEnvContext {
     env_state: Option<EnvState>,
+    editor_state: Option<EditorState>
 }
 
 impl UserEnvContext {
     pub fn generate_new() -> Self {
         Self {
             env_state: Some(build_env_state()),
+            editor_state: crate::jsonrpc_server::get_current_editor_state(),
         }
     }
 }

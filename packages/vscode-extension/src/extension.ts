@@ -34,41 +34,41 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  let disposable = vscode.commands.registerCommand(
-    "amazonq.sendActiveFile",
-    () => {
-      const activeEditor = vscode.window.activeTextEditor;
-      if (!activeEditor) {
-        vscode.window.showInformationMessage("No active file");
-        return;
-      }
-
-      const filePath = activeEditor.document.fileName;
-      const line = activeEditor.selection.active.line + 1;
-      const message = `Active file: ${filePath}:${line}`;
-
-      sendToQCli(message);
-    }
-  );
-
-  context.subscriptions.push(openTerminalDisposable, disposable);
+  context.subscriptions.push(openTerminalDisposable);
 
   // Auto-send on file change
   vscode.window.onDidChangeActiveTextEditor((editor) => {
     if (editor) {
-      const filePath = editor.document.fileName;
-      const message = `Active file: ${filePath}`;
-      sendToQCli(message);
+      sendEditorStateUpdate(editor);
+    }
+  });
+
+  // Send updates when document content changes
+  vscode.workspace.onDidChangeTextDocument((event) => {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor && event.document === activeEditor.document) {
+      sendEditorStateUpdate(activeEditor);
     }
   });
 }
 
-function sendToQCli(message: string) {
+function sendEditorStateUpdate(editor: vscode.TextEditor) {
+  const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+    editor.document.uri
+  );
+  const relativePath = workspaceFolder
+    ? vscode.workspace.asRelativePath(editor.document.uri)
+    : editor.document.fileName;
+
   const data = JSON.stringify({
     jsonrpc: "2.0",
-    method: "display_message",
-    params: [message],
-    id: 1,
+    method: "update_editor_state",
+    params: {
+      relative_file_path: relativePath,
+      language: editor.document.languageId,
+      text: editor.document.getText(),
+    },
+    id: 2,
   });
 
   const options = {
@@ -84,12 +84,12 @@ function sendToQCli(message: string) {
 
   const req = http.request(options, (res) => {
     if (res.statusCode !== 200) {
-      console.error("Failed to send to Q CLI:", res.statusCode);
+      console.error("Failed to send editor state to Q CLI:", res.statusCode);
     }
   });
 
   req.on("error", (error) => {
-    console.error("Error sending to Q CLI:", error);
+    console.error("Error sending editor state to Q CLI:", error);
   });
 
   req.write(data);
