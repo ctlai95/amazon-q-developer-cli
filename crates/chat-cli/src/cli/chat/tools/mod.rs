@@ -6,6 +6,7 @@ pub mod gh_issue;
 pub mod knowledge;
 pub mod thinking;
 pub mod use_aws;
+pub mod vscode_integration;
 
 use std::borrow::Borrow;
 use std::io::Write;
