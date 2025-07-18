@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as http from "http";
+import * as WebSocket from "ws";
 
 export function activate(context: vscode.ExtensionContext) {
   // Command to open Amazon Q CLI terminal
@@ -240,14 +240,51 @@ function sendSelectedCodeToCli() {
   // TODO: Send this as editor context
 }
 
+let ws: WebSocket | null = null;
+
+function connectWebSocket() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    return;
+  }
+
+  ws = new WebSocket("ws://127.0.0.1:3030");
+
+  ws.on("open", () => {
+    console.log("WebSocket connected to Q CLI");
+  });
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
+    ws = null;
+  });
+
+  ws.on("close", () => {
+    console.log("WebSocket disconnected from Q CLI");
+    ws = null;
+  });
+
+  ws.on("message", (data) => {
+    console.log("Received from Q CLI:", data.toString());
+  });
+}
+
 function sendEditorStateUpdate(editor: vscode.TextEditor) {
+  connectWebSocket();
+
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    console.log("WebSocket not ready, attempting to connect...");
+    setTimeout(() => sendEditorStateUpdate(editor), 1000);
+    return;
+  }
+
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(
     editor.document.uri
   );
   const relativePath = workspaceFolder
     ? vscode.workspace.asRelativePath(editor.document.uri)
     : editor.document.fileName;
-  const data = JSON.stringify({
+
+  const message = {
     jsonrpc: "2.0",
     method: "update_editor_state",
     params: {
@@ -256,31 +293,9 @@ function sendEditorStateUpdate(editor: vscode.TextEditor) {
       text: editor.document.getText(),
     },
     id: 2,
-  });
-
-  const options = {
-    hostname: "127.0.0.1",
-    port: 3030,
-    path: "/",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(data),
-    },
   };
 
-  const req = http.request(options, (res) => {
-    if (res.statusCode !== 200) {
-      console.error("Failed to send editor state to Q CLI:", res.statusCode);
-    }
-  });
-
-  req.on("error", (error) => {
-    console.error("Error sending editor state to Q CLI:", error);
-  });
-
-  req.write(data);
-  req.end();
+  ws.send(JSON.stringify(message));
 }
 
 export function deactivate() {}
