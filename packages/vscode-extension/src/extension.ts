@@ -141,6 +141,9 @@ export function activate(context: vscode.ExtensionContext) {
       const editor = event.textEditor;
       const selection = editor.selection;
 
+      // Always send editor state update for selection changes
+      sendEditorStateUpdate(editor);
+
       // Skip empty selections
       if (selection.isEmpty) {
         isSelecting = false;
@@ -291,6 +294,28 @@ function sendEditorStateUpdate(editor: vscode.TextEditor) {
       relative_file_path: relativePath,
       language: editor.document.languageId,
       text: editor.document.getText(),
+      cursor_state: editor.selection.isEmpty
+        ? {
+            position: {
+              line: editor.selection.active.line,
+              character: editor.selection.active.character,
+            },
+          }
+        : {
+            range: {
+              start: {
+                line: editor.selection.start.line,
+                character: editor.selection.start.character,
+              },
+              end: {
+                line: editor.selection.end.line,
+                character: editor.selection.end.character,
+              },
+            },
+          },
+      workspace_folders:
+        vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
+        [],
     },
     id: 2,
   };
