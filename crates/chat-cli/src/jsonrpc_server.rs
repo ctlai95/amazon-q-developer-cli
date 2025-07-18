@@ -1,12 +1,15 @@
+use std::sync::{
+    Arc,
+    Mutex,
+};
+
 use eyre::Result;
+use once_cell::sync::Lazy;
 use serde_json::{
     Value,
     json,
 };
 use warp::Filter;
-
-use std::sync::{Arc, Mutex};
-use once_cell::sync::Lazy;
 
 #[derive(Debug, Clone, Default)]
 pub struct EditorInfo {
@@ -20,8 +23,10 @@ static CURRENT_EDITOR: Lazy<Arc<Mutex<EditorInfo>>> = Lazy::new(|| Arc::new(Mute
 pub fn get_current_editor_state() -> Option<crate::api_client::model::EditorState> {
     let editor_info = CURRENT_EDITOR.lock().unwrap();
 
-    if let Some(ref path) = editor_info.relative_file_path {
-        Some(crate::api_client::model::EditorState {
+    editor_info
+        .relative_file_path
+        .as_ref()
+        .map(|path| crate::api_client::model::EditorState {
             document: Some(crate::api_client::model::TextDocument {
                 relative_file_path: path.clone(),
                 programming_language: None,
@@ -33,18 +38,24 @@ pub fn get_current_editor_state() -> Option<crate::api_client::model::EditorStat
             use_relevant_documents: Some(false),
             workspace_folders: None,
         })
-    } else {
-        None
-    }
 }
 
 pub fn set_current_editor(info: EditorInfo) {
     *CURRENT_EDITOR.lock().unwrap() = info;
 
     if let Some(ref path) = CURRENT_EDITOR.lock().unwrap().relative_file_path {
-        use crossterm::{cursor, execute, style, terminal};
-        use crossterm::style::{Color, Stylize};
         use std::io;
+
+        use crossterm::style::{
+            Color,
+            Stylize,
+        };
+        use crossterm::{
+            cursor,
+            execute,
+            style,
+            terminal,
+        };
 
         let mut stdout = io::stdout();
         let _ = execute!(
@@ -58,6 +69,7 @@ pub fn set_current_editor(info: EditorInfo) {
     }
 }
 
+#[derive(Default)]
 pub struct JsonRpcServer;
 
 #[derive(serde::Deserialize)]
@@ -69,45 +81,42 @@ struct JsonRpcRequest {
 
 impl JsonRpcServer {
     pub fn new() -> Self {
-        Self
+        Self::default()
     }
 
     pub fn start(&self, port: u16) -> Result<()> {
-        let rpc = warp::path::end()
-            .and(warp::post())
-            .and(warp::body::json())
-            .and_then(move |req: JsonRpcRequest| {
-                async move {
-                    if req.method == "update_editor_state" {
-                        if let Some(params) = req.params {
-                            let mut editor_info = EditorInfo::default();
+        let rpc = warp::path::end().and(warp::post()).and(warp::body::json()).and_then(
+            move |req: JsonRpcRequest| async move {
+                if req.method == "update_editor_state" {
+                    if let Some(params) = req.params {
+                        let mut editor_info = EditorInfo::default();
 
-                            if let Some(path) = params.get("relative_file_path").and_then(|v| v.as_str()) {
-                                editor_info.relative_file_path = Some(path.to_string());
-                            }
-                            if let Some(lang) = params.get("language").and_then(|v| v.as_str()) {
-                                editor_info.language = Some(lang.to_string());
-                            }
-                            if let Some(text) = params.get("text").and_then(|v| v.as_str()) {
-                                editor_info.text = Some(text.to_string());
-                            }
-
-                            set_current_editor(editor_info);
+                        if let Some(path) = params.get("relative_file_path").and_then(|v| v.as_str()) {
+                            editor_info.relative_file_path = Some(path.to_string());
                         }
-                        Ok::<_, warp::Rejection>(warp::reply::json(&json!({
-                            "jsonrpc": "2.0",
-                            "result": {"status": "ok"},
-                            "id": req.id
-                        })))
-                    } else {
-                        Ok(warp::reply::json(&json!({
-                            "jsonrpc": "2.0",
-                            "error": {"code": -32601, "message": "Method not found"},
-                            "id": req.id
-                        })))
+                        if let Some(lang) = params.get("language").and_then(|v| v.as_str()) {
+                            editor_info.language = Some(lang.to_string());
+                        }
+                        if let Some(text) = params.get("text").and_then(|v| v.as_str()) {
+                            editor_info.text = Some(text.to_string());
+                        }
+
+                        set_current_editor(editor_info);
                     }
+                    Ok::<_, warp::Rejection>(warp::reply::json(&json!({
+                        "jsonrpc": "2.0",
+                        "result": {"status": "ok"},
+                        "id": req.id
+                    })))
+                } else {
+                    Ok(warp::reply::json(&json!({
+                        "jsonrpc": "2.0",
+                        "error": {"code": -32601, "message": "Method not found"},
+                        "id": req.id
+                    })))
                 }
-            });
+            },
+        );
 
         println!("JSON-RPC server listening on http://127.0.0.1:{}", port);
 

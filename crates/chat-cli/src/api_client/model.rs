@@ -100,6 +100,7 @@ pub struct ConversationState {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum ChatMessage {
     AssistantResponseMessage(AssistantResponseMessage),
     UserInputMessage(UserInputMessage),
@@ -824,7 +825,6 @@ pub struct Range {
     pub end: Position,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageBlock {
     pub format: ImageFormat,
@@ -1015,7 +1015,11 @@ impl From<EditorState> for amzn_codewhisperer_streaming_client::types::EditorSta
         Self::builder()
             .set_document(value.document.map(Into::into))
             .set_cursor_state(value.cursor_state.map(Into::into))
-            .set_relevant_documents(value.relevant_documents.map(|docs| docs.into_iter().map(Into::into).collect()))
+            .set_relevant_documents(
+                value
+                    .relevant_documents
+                    .map(|docs| docs.into_iter().map(Into::into).collect()),
+            )
             .set_use_relevant_documents(value.use_relevant_documents)
             .set_workspace_folders(value.workspace_folders)
             .build()
@@ -1027,7 +1031,11 @@ impl From<EditorState> for amzn_qdeveloper_streaming_client::types::EditorState 
         Self::builder()
             .set_document(value.document.map(Into::into))
             .set_cursor_state(value.cursor_state.map(Into::into))
-            .set_relevant_documents(value.relevant_documents.map(|docs| docs.into_iter().map(Into::into).collect()))
+            .set_relevant_documents(
+                value
+                    .relevant_documents
+                    .map(|docs| docs.into_iter().map(Into::into).collect()),
+            )
             .set_use_relevant_documents(value.use_relevant_documents)
             .set_workspace_folders(value.workspace_folders)
             .build()
@@ -1040,7 +1048,11 @@ impl From<TextDocument> for amzn_codewhisperer_streaming_client::types::TextDocu
             .relative_file_path(value.relative_file_path)
             .set_programming_language(value.programming_language.map(Into::into))
             .set_text(value.text)
-            .set_document_symbols(value.document_symbols.map(|syms| syms.into_iter().map(Into::into).collect()))
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
             .build()
             .expect("Failed to build TextDocument")
     }
@@ -1052,7 +1064,11 @@ impl From<TextDocument> for amzn_qdeveloper_streaming_client::types::TextDocumen
             .relative_file_path(value.relative_file_path)
             .set_programming_language(value.programming_language.map(Into::into))
             .set_text(value.text)
-            .set_document_symbols(value.document_symbols.map(|syms| syms.into_iter().map(Into::into).collect()))
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
             .build()
             .expect("Failed to build TextDocument")
     }
@@ -1122,7 +1138,11 @@ impl From<RelevantTextDocument> for amzn_codewhisperer_streaming_client::types::
             .relative_file_path(value.relative_file_path)
             .set_programming_language(value.programming_language.map(Into::into))
             .set_text(value.text)
-            .set_document_symbols(value.document_symbols.map(|syms| syms.into_iter().map(Into::into).collect()))
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
             .set_type(value.content_type.map(Into::into))
             .build()
             .expect("Failed to build RelevantTextDocument")
@@ -1135,7 +1155,11 @@ impl From<RelevantTextDocument> for amzn_qdeveloper_streaming_client::types::Rel
             .relative_file_path(value.relative_file_path)
             .set_programming_language(value.programming_language.map(Into::into))
             .set_text(value.text)
-            .set_document_symbols(value.document_symbols.map(|syms| syms.into_iter().map(Into::into).collect()))
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
             .set_type(value.content_type.map(Into::into))
             .build()
             .expect("Failed to build RelevantTextDocument")
@@ -1255,10 +1279,7 @@ mod tests {
                         text: Some("test text".to_string()),
                         document_symbols: None,
                     }),
-                    cursor_state: Some(CursorState::Position(Position {
-                        line: 1,
-                        character: 2,
-                    })),
+                    cursor_state: Some(CursorState::Position(Position { line: 1, character: 2 })),
                     relevant_documents: None,
                     use_relevant_documents: None,
                     workspace_folders: None,

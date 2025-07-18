@@ -27,6 +27,7 @@ use super::util::{
 };
 use crate::api_client::model::{
     AssistantResponseMessage,
+    EditorState,
     EnvState,
     ImageBlock,
     Tool,
@@ -36,7 +37,6 @@ use crate::api_client::model::{
     ToolUse,
     UserInputMessage,
     UserInputMessageContext,
-    EditorState,
 };
 
 const USER_ENTRY_START_HEADER: &str = "--- USER MESSAGE BEGIN ---\n";
@@ -367,7 +367,7 @@ impl From<InvokeOutput> for ToolUseResultBlock {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserEnvContext {
     env_state: Option<EnvState>,
-    editor_state: Option<EditorState>
+    editor_state: Option<EditorState>,
 }
 
 impl UserEnvContext {
