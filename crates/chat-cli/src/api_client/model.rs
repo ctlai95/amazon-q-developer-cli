@@ -100,6 +100,7 @@ pub struct ConversationState {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum ChatMessage {
     AssistantResponseMessage(AssistantResponseMessage),
     UserInputMessage(UserInputMessage),
@@ -760,6 +761,71 @@ impl From<GitState> for amzn_qdeveloper_streaming_client::types::GitState {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EditorState {
+    pub document: Option<TextDocument>,
+    pub cursor_state: Option<CursorState>,
+    pub relevant_documents: Option<Vec<RelevantTextDocument>>,
+    pub use_relevant_documents: Option<bool>,
+    pub workspace_folders: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TextDocument {
+    pub relative_file_path: String,
+    pub programming_language: Option<ProgrammingLanguage>,
+    pub text: Option<String>,
+    pub document_symbols: Option<Vec<DocumentSymbol>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocumentSymbol {
+    pub name: String,
+    pub symbol_type: SymbolType,
+    pub source: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SymbolType {
+    Declaration,
+    Usage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RelevantTextDocument {
+    pub relative_file_path: String,
+    pub programming_language: Option<ProgrammingLanguage>,
+    pub text: Option<String>,
+    pub document_symbols: Option<Vec<DocumentSymbol>>,
+    pub content_type: Option<ContentType>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ContentType {
+    Code,
+    File,
+    Prompt,
+    Workspace,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CursorState {
+    Position(Position),
+    Range(Range),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Position {
+    pub line: i32,
+    pub character: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Range {
+    pub start: Position,
+    pub end: Position,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageBlock {
     pub format: ImageFormat,
     pub source: ImageSource,
@@ -870,7 +936,7 @@ impl From<UserInputMessage> for amzn_codewhisperer_streaming_client::types::User
             .set_user_input_message_context(value.user_input_message_context.map(Into::into))
             .set_user_intent(value.user_intent.map(Into::into))
             .set_model_id(value.model_id)
-            .origin(amzn_codewhisperer_streaming_client::types::Origin::Cli)
+            .origin(amzn_codewhisperer_streaming_client::types::Origin::Ide)
             .build()
             .expect("Failed to build UserInputMessage")
     }
@@ -884,7 +950,7 @@ impl From<UserInputMessage> for amzn_qdeveloper_streaming_client::types::UserInp
             .set_user_input_message_context(value.user_input_message_context.map(Into::into))
             .set_user_intent(value.user_intent.map(Into::into))
             .set_model_id(value.model_id)
-            .origin(amzn_qdeveloper_streaming_client::types::Origin::Cli)
+            .origin(amzn_qdeveloper_streaming_client::types::Origin::Ide)
             .build()
             .expect("Failed to build UserInputMessage")
     }
@@ -894,6 +960,7 @@ impl From<UserInputMessage> for amzn_qdeveloper_streaming_client::types::UserInp
 pub struct UserInputMessageContext {
     pub env_state: Option<EnvState>,
     pub git_state: Option<GitState>,
+    pub editor_state: Option<EditorState>,
     pub tool_results: Option<Vec<ToolResult>>,
     pub tools: Option<Vec<Tool>>,
 }
@@ -903,6 +970,7 @@ impl From<UserInputMessageContext> for amzn_codewhisperer_streaming_client::type
         Self::builder()
             .set_env_state(value.env_state.map(Into::into))
             .set_git_state(value.git_state.map(Into::into))
+            .set_editor_state(value.editor_state.map(Into::into))
             .set_tool_results(value.tool_results.map(|t| t.into_iter().map(Into::into).collect()))
             .set_tools(value.tools.map(|t| t.into_iter().map(Into::into).collect()))
             .build()
@@ -914,6 +982,7 @@ impl From<UserInputMessageContext> for amzn_qdeveloper_streaming_client::types::
         Self::builder()
             .set_env_state(value.env_state.map(Into::into))
             .set_git_state(value.git_state.map(Into::into))
+            .set_editor_state(value.editor_state.map(Into::into))
             .set_tool_results(value.tool_results.map(|t| t.into_iter().map(Into::into).collect()))
             .set_tools(value.tools.map(|t| t.into_iter().map(Into::into).collect()))
             .build()
@@ -941,6 +1010,242 @@ impl From<UserIntent> for amzn_qdeveloper_streaming_client::types::UserIntent {
     }
 }
 
+impl From<EditorState> for amzn_codewhisperer_streaming_client::types::EditorState {
+    fn from(value: EditorState) -> Self {
+        Self::builder()
+            .set_document(value.document.map(Into::into))
+            .set_cursor_state(value.cursor_state.map(Into::into))
+            .set_relevant_documents(
+                value
+                    .relevant_documents
+                    .map(|docs| docs.into_iter().map(Into::into).collect()),
+            )
+            .set_use_relevant_documents(value.use_relevant_documents)
+            .set_workspace_folders(value.workspace_folders)
+            .build()
+    }
+}
+
+impl From<EditorState> for amzn_qdeveloper_streaming_client::types::EditorState {
+    fn from(value: EditorState) -> Self {
+        Self::builder()
+            .set_document(value.document.map(Into::into))
+            .set_cursor_state(value.cursor_state.map(Into::into))
+            .set_relevant_documents(
+                value
+                    .relevant_documents
+                    .map(|docs| docs.into_iter().map(Into::into).collect()),
+            )
+            .set_use_relevant_documents(value.use_relevant_documents)
+            .set_workspace_folders(value.workspace_folders)
+            .build()
+    }
+}
+
+impl From<TextDocument> for amzn_codewhisperer_streaming_client::types::TextDocument {
+    fn from(value: TextDocument) -> Self {
+        Self::builder()
+            .relative_file_path(value.relative_file_path)
+            .set_programming_language(value.programming_language.map(Into::into))
+            .set_text(value.text)
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
+            .build()
+            .expect("Failed to build TextDocument")
+    }
+}
+
+impl From<TextDocument> for amzn_qdeveloper_streaming_client::types::TextDocument {
+    fn from(value: TextDocument) -> Self {
+        Self::builder()
+            .relative_file_path(value.relative_file_path)
+            .set_programming_language(value.programming_language.map(Into::into))
+            .set_text(value.text)
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
+            .build()
+            .expect("Failed to build TextDocument")
+    }
+}
+
+impl From<CursorState> for amzn_codewhisperer_streaming_client::types::CursorState {
+    fn from(value: CursorState) -> Self {
+        match value {
+            CursorState::Position(pos) => Self::Position(pos.into()),
+            CursorState::Range(range) => Self::Range(range.into()),
+        }
+    }
+}
+
+impl From<CursorState> for amzn_qdeveloper_streaming_client::types::CursorState {
+    fn from(value: CursorState) -> Self {
+        match value {
+            CursorState::Position(pos) => Self::Position(pos.into()),
+            CursorState::Range(range) => Self::Range(range.into()),
+        }
+    }
+}
+
+impl From<Position> for amzn_codewhisperer_streaming_client::types::Position {
+    fn from(value: Position) -> Self {
+        Self::builder()
+            .line(value.line)
+            .character(value.character)
+            .build()
+            .expect("Failed to build Position")
+    }
+}
+
+impl From<Position> for amzn_qdeveloper_streaming_client::types::Position {
+    fn from(value: Position) -> Self {
+        Self::builder()
+            .line(value.line)
+            .character(value.character)
+            .build()
+            .expect("Failed to build Position")
+    }
+}
+
+impl From<Range> for amzn_codewhisperer_streaming_client::types::Range {
+    fn from(value: Range) -> Self {
+        Self::builder()
+            .start(value.start.into())
+            .end(value.end.into())
+            .build()
+            .expect("Failed to build Range")
+    }
+}
+
+impl From<Range> for amzn_qdeveloper_streaming_client::types::Range {
+    fn from(value: Range) -> Self {
+        Self::builder()
+            .start(value.start.into())
+            .end(value.end.into())
+            .build()
+            .expect("Failed to build Range")
+    }
+}
+
+impl From<RelevantTextDocument> for amzn_codewhisperer_streaming_client::types::RelevantTextDocument {
+    fn from(value: RelevantTextDocument) -> Self {
+        Self::builder()
+            .relative_file_path(value.relative_file_path)
+            .set_programming_language(value.programming_language.map(Into::into))
+            .set_text(value.text)
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
+            .set_type(value.content_type.map(Into::into))
+            .build()
+            .expect("Failed to build RelevantTextDocument")
+    }
+}
+
+impl From<RelevantTextDocument> for amzn_qdeveloper_streaming_client::types::RelevantTextDocument {
+    fn from(value: RelevantTextDocument) -> Self {
+        Self::builder()
+            .relative_file_path(value.relative_file_path)
+            .set_programming_language(value.programming_language.map(Into::into))
+            .set_text(value.text)
+            .set_document_symbols(
+                value
+                    .document_symbols
+                    .map(|syms| syms.into_iter().map(Into::into).collect()),
+            )
+            .set_type(value.content_type.map(Into::into))
+            .build()
+            .expect("Failed to build RelevantTextDocument")
+    }
+}
+
+impl From<DocumentSymbol> for amzn_codewhisperer_streaming_client::types::DocumentSymbol {
+    fn from(value: DocumentSymbol) -> Self {
+        Self::builder()
+            .name(value.name)
+            .r#type(value.symbol_type.into())
+            .set_source(value.source)
+            .build()
+            .expect("Failed to build DocumentSymbol")
+    }
+}
+
+impl From<DocumentSymbol> for amzn_qdeveloper_streaming_client::types::DocumentSymbol {
+    fn from(value: DocumentSymbol) -> Self {
+        Self::builder()
+            .name(value.name)
+            .r#type(value.symbol_type.into())
+            .set_source(value.source)
+            .build()
+            .expect("Failed to build DocumentSymbol")
+    }
+}
+
+impl From<SymbolType> for amzn_codewhisperer_streaming_client::types::SymbolType {
+    fn from(value: SymbolType) -> Self {
+        match value {
+            SymbolType::Declaration => Self::Declaration,
+            SymbolType::Usage => Self::Usage,
+        }
+    }
+}
+
+impl From<SymbolType> for amzn_qdeveloper_streaming_client::types::SymbolType {
+    fn from(value: SymbolType) -> Self {
+        match value {
+            SymbolType::Declaration => Self::Declaration,
+            SymbolType::Usage => Self::Usage,
+        }
+    }
+}
+
+impl From<ContentType> for amzn_codewhisperer_streaming_client::types::ContentType {
+    fn from(value: ContentType) -> Self {
+        match value {
+            ContentType::Code => Self::Code,
+            ContentType::File => Self::File,
+            ContentType::Prompt => Self::Prompt,
+            ContentType::Workspace => Self::Workspace,
+        }
+    }
+}
+
+impl From<ContentType> for amzn_qdeveloper_streaming_client::types::ContentType {
+    fn from(value: ContentType) -> Self {
+        match value {
+            ContentType::Code => Self::Code,
+            ContentType::File => Self::File,
+            ContentType::Prompt => Self::Prompt,
+            ContentType::Workspace => Self::Workspace,
+        }
+    }
+}
+
+impl From<ProgrammingLanguage> for amzn_codewhisperer_streaming_client::types::ProgrammingLanguage {
+    fn from(value: ProgrammingLanguage) -> Self {
+        Self::builder()
+            .language_name(value.language_name.as_ref().to_string())
+            .build()
+            .expect("Failed to build ProgrammingLanguage")
+    }
+}
+
+impl From<ProgrammingLanguage> for amzn_qdeveloper_streaming_client::types::ProgrammingLanguage {
+    fn from(value: ProgrammingLanguage) -> Self {
+        Self::builder()
+            .language_name(value.language_name.as_ref().to_string())
+            .build()
+            .expect("Failed to build ProgrammingLanguage")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -964,6 +1269,20 @@ mod tests {
                 }),
                 git_state: Some(GitState {
                     status: "test status".to_string(),
+                }),
+                editor_state: Some(EditorState {
+                    document: Some(TextDocument {
+                        relative_file_path: "test/path/to/file".to_string(),
+                        programming_language: Some(ProgrammingLanguage {
+                            language_name: LanguageName::Rust,
+                        }),
+                        text: Some("test text".to_string()),
+                        document_symbols: None,
+                    }),
+                    cursor_state: Some(CursorState::Position(Position { line: 1, character: 2 })),
+                    relevant_documents: None,
+                    use_relevant_documents: None,
+                    workspace_folders: None,
                 }),
                 tool_results: Some(vec![ToolResult {
                     tool_use_id: "test id".to_string(),
