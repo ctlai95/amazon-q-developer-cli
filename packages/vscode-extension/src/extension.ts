@@ -26,9 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
           // Send command to terminal
           const terminal = vscode.window.activeTerminal;
           if (terminal) {
-            terminal.sendText(
-              "source ~/.cargo/env && cargo run --bin chat_cli"
-            );
+            terminal.sendText("./target/release/chat_cli");
           }
         });
     }
