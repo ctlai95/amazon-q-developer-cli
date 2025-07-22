@@ -2,6 +2,17 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "build-cli",
+            "type": "shell",
+            "command": "cargo",
+            "args": ["build", "--release", "--bin", "chat_cli"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": "$rustc"
+        },
+        {
             "label": "compile-extension",
             "type": "shell",
             "command": "npm",
@@ -9,7 +20,8 @@
             "options": {
                 "cwd": "${workspaceFolder}/packages/vscode-extension"
             },
-            "group": "build"
+            "group": "build",
+            "dependsOn": "build-cli"
         }
     ]
 }
