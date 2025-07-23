@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
         cwd: "/Users/laileni/Desktop/Q/Kiro-Code", // Name Repo accordingly
         name: "Amazon Q CLI",
         location: { viewColumn: vscode.ViewColumn.Beside },
-        iconPath: vscode.Uri.file(context.extensionPath + "/src/kiro.svg"),
+        iconPath: vscode.Uri.file(context.extensionPath + "/src/icon.svg"),
       });
 
       // Show the terminal
@@ -315,7 +315,10 @@ function sendEditorStateUpdate(editor: vscode.TextEditor) {
     : editor.document.fileName;
 
   // Ignore files with paths starting with /var
-  if (relativePath.startsWith("/var") || editor.document.fileName.startsWith("/var")) {
+  if (
+    relativePath.startsWith("/var") ||
+    editor.document.fileName.startsWith("/var")
+  ) {
     console.log("Ignoring file with /var path:", editor.document.fileName);
     return;
   }

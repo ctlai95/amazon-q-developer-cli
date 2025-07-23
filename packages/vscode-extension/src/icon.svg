@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="0" y="0" width="64" height="64" rx="12" fill="url(#bgGradient)" />
+
+  <!-- Angled bracket '>' -->
+  <polygon points="18,26 26,34 18,42 22,46 34,34 22,22" fill="white" />
+
+  <!-- Underscore '_' moved closer -->
+  <rect x="38" y="46" width="12" height="6" rx="2" fill="white" />
+</svg>
+

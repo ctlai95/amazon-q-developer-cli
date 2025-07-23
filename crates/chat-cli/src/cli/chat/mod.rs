@@ -142,7 +142,7 @@ const LIMIT_REACHED_TEXT: &str = color_print::cstr! { "You've used all your free
 
 pub const EXTRA_HELP: &str = color_print::cstr! {"
 <cyan,em>MCP:</cyan,em>
-<black!>You can now configure the Amazon Kiro Code to use MCP servers. \nLearn how: https://docs.aws.amazon.com/en_us/amazonq/latest/qdeveloper-ug/command-line-mcp.html</black!>
+<black!>You can now configure the Amazon CLIDE to use MCP servers. \nLearn how: https://docs.aws.amazon.com/en_us/amazonq/latest/qdeveloper-ug/command-line-mcp.html</black!>
 
 <cyan,em>Tips:</cyan,em>
 <em>!{command}</em>          <black!>Quickly execute a command in your current session</black!>
@@ -311,31 +311,31 @@ impl ChatArgs {
 }
 
 const WELCOME_TEXT: &str = color_print::cstr! {"<cyan!>
-  .-.   ██╗  ██╗██╗██████╗  ██████╗      ██████╗ ██████╗ ██████╗ ███████╗
- | OO|  ██║ ██╔╝██║██╔══██╗██╔═══██╗    ██╔════╝██╔═══██╗██╔══██╗██╔════╝
- |   |  █████╔╝ ██║██████╔╝██║   ██║    ██║     ██║   ██║██║  ██║█████╗
- '^^^'  ██╔═██╗ ██║██╔══██╗██║   ██║    ██║     ██║   ██║██║  ██║██╔══╝
-        ██║  ██╗██║██║  ██║╚██████╔╝    ╚██████╗╚██████╔╝██████╔╝███████╗
-        ╚═╝  ╚═╝╚═╝╚═╝  ╚═╝ ╚═════╝      ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝
+ ██████╗██╗     ██╗██████╗ ███████╗
+██╔════╝██║     ██║██╔══██╗██╔════╝
+██║     ██║     ██║██║  ██║█████╗
+██║     ██║     ██║██║  ██║██╔══╝
+╚██████╗███████╗██║██████╔╝███████╗
+ ╚═════╝╚══════╝╚═╝╚═════╝ ╚══════╝
 </cyan!>"};
 
-const SMALL_SCREEN_WELCOME_TEXT: &str = color_print::cstr! {"<em>Welcome to <cyan!>Kiro Code</cyan!>!</em>"};
+const SMALL_SCREEN_WELCOME_TEXT: &str = color_print::cstr! {"<em>Welcome to <cyan!>CLIDE</cyan!>!</em>"};
 const RESUME_TEXT: &str = color_print::cstr! {"<em>Picking up where we left off...</em>"};
 
 // Only show the model-related tip for now to make users aware of this feature.
 const ROTATING_TIPS: [&str; 16] = [
     color_print::cstr! {"You can resume the last conversation from your current directory by launching with
     <green!>q chat --resume</green!>"},
-    color_print::cstr! {"Get notified whenever Kiro Code finishes responding.
+    color_print::cstr! {"Get notified whenever CLIDE finishes responding.
     Just run <green!>q settings chat.enableNotifications true</green!>"},
     color_print::cstr! {"You can use
     <green!>/editor</green!> to edit your prompt with a vim-like experience"},
     color_print::cstr! {"<green!>/usage</green!> shows you a visual breakdown of your current context window usage"},
-    color_print::cstr! {"Get notified whenever Kiro Code finishes responding. Just run <green!>q settings
+    color_print::cstr! {"Get notified whenever CLIDE finishes responding. Just run <green!>q settings
     chat.enableNotifications true</green!>"},
     color_print::cstr! {"You can execute bash commands by typing
     <green!>!</green!> followed by the command"},
-    color_print::cstr! {"Kiro Code can use tools without asking for
+    color_print::cstr! {"CLIDE can use tools without asking for
     confirmation every time. Give <green!>/tools trust</green!> a try"},
     color_print::cstr! {"You can
     programmatically inject context to your prompts by using hooks. Check out <green!>/context hooks
@@ -343,7 +343,7 @@ const ROTATING_TIPS: [&str; 16] = [
     color_print::cstr! {"You can use <green!>/compact</green!> to replace the conversation
     history with its summary to free up the context space"},
     color_print::cstr! {"If you want to file an issue
-    to the Kiro Code team, just tell me, or run <green!>q issue</green!>"},
+    to the CLIDE team, just tell me, or run <green!>q issue</green!>"},
     color_print::cstr! {"You can enable
     custom tools with <green!>MCP servers</green!>. Learn more with /help"},
     color_print::cstr! {"You can
