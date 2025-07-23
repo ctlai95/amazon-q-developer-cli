@@ -117,6 +117,11 @@ pub fn notify_ide(method: &str, params: Value) -> Result<()> {
     send_to_ide(notification)
 }
 
+/// Checks if the WebSocket connection to the IDE is active
+pub fn is_websocket_connected() -> bool {
+    WS_SENDER.lock().unwrap().is_some()
+}
+
 async fn handle_websocket(ws: warp::ws::WebSocket) {
     let (mut ws_sender, mut ws_receiver) = ws.split();
 

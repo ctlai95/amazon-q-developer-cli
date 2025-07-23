@@ -6,8 +6,12 @@
   "engines": {
     "vscode": "^1.74.0"
   },
-  "categories": ["Other"],
-  "activationEvents": ["onStartupFinished"],
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -23,6 +27,10 @@
       {
         "command": "amazonq.sendSelectedCode",
         "title": "Send Selected Code to Amazon Q CLI"
+      },
+      {
+        "command": "amazonq.showDiffView",
+        "title": "Show Clean Diff View"
       }
     ],
     "menus": {
