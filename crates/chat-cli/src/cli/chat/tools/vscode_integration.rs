@@ -1,4 +1,4 @@
-use eyre::{Result, eyre};
+use eyre::{Result};
 use serde_json::json;
 use std::path::Path;
 

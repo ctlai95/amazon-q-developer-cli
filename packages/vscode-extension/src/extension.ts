@@ -9,8 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       vscode.commands
         .executeCommand("workbench.action.terminal.new", {
-          cwd: "/Users/laileni/Desktop/Q/amazon-q-developer-cli",
-          name: "Amazon Q CLI",
+          cwd: "/Volumes/workplace/github/amazon-q-developer-cli",
+          name: "Kiro Code",
         })
         .then(() => {
           // Move terminal to editor area first
