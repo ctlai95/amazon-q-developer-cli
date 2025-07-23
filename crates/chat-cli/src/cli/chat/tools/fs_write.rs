@@ -19,6 +19,7 @@ use globset::{
 };
 use serde::Deserialize;
 use similar::DiffableStr;
+use strip_ansi_escapes;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
@@ -507,6 +508,58 @@ fn print_diff(
     new_str: &StylizedFile,
     start_line: usize,
 ) -> Result<()> {
+    // Try to use VSCode integration first if the file path is available
+    if let Some(file_path) = get_current_file_path() {
+        // Check if VSCode integration is available using a non-blocking approach
+        let vscode_available = tokio::task::block_in_place(|| {
+            // Use a timeout to avoid blocking for too long
+            match tokio::runtime::Handle::try_current() {
+                Ok(rt) => {
+                    rt.block_on(async {
+                        super::vscode_integration::is_vscode_integration_available().await
+                    })
+                },
+                Err(e) => {
+                    tracing::warn!("Failed to get tokio runtime handle: {}", e);
+                    false
+                }
+            }
+        });
+        
+        if vscode_available {
+            writeln!(output, "VSCode integration available. Attempting to show diff in VSCode...")?;
+            
+            // We'll just inform the user that VSCode integration is being attempted
+            writeln!(output, "Diff view request sent to VSCode. Check your VSCode window.")?;
+            
+            // Create clean diff files for VSCode diff view
+            if let Err(e) = send_clean_diff_to_vscode(old_str, new_str, &file_path) {
+                writeln!(output, "Failed to send clean diff to VSCode: {}", e)?;
+                tracing::error!("Failed to send clean diff to VSCode: {}", e);
+            } else {
+                writeln!(output, "Clean diff view sent to VSCode without ASCII formatting.")?;
+            }
+            
+            // We'll still show the terminal diff as a fallback
+            writeln!(output, "Showing terminal diff as well for reference:")?;
+        } else {
+            writeln!(output, "VSCode integration not available. Using terminal diff...")?;
+        }
+    }
+
+    // Show terminal diff
+    print_terminal_diff(output, old_str, new_str, start_line)?;
+
+    Ok(())
+}
+
+/// Prints a git-diff style comparison in the terminal with ASCII formatting
+fn print_terminal_diff(
+    output: &mut impl Write,
+    old_str: &StylizedFile,
+    new_str: &StylizedFile,
+    start_line: usize,
+) -> Result<()> {
     let diff = similar::TextDiff::from_lines(&old_str.content, &new_str.content);
 
     // First, get the gutter width required for both the old and new lines.
@@ -605,6 +658,129 @@ fn print_diff(
     )?;
 
     Ok(())
+}
+
+/// Sends a clean diff to VSCode without ASCII formatting characters
+/// This function extracts the raw content from StylizedFile objects and sends it to VSCode
+/// It sends the entire original file content and the entire modified file content for the VSCode diff view
+fn send_clean_diff_to_vscode(
+    old_str: &StylizedFile,
+    new_str: &StylizedFile,
+    file_path: &std::path::Path,
+) -> Result<()> {
+    // Extract raw content from the stylized files
+    let original_raw_content = extract_raw_content(old_str);
+    let modified_raw_content = extract_raw_content(new_str);
+    
+    tracing::debug!("Sending clean diff to VSCode with raw content");
+    
+    // Try to read the entire original file content if it exists
+    let entire_original_content = if file_path.exists() {
+        match std::fs::read_to_string(file_path) {
+            Ok(content) => content,
+            Err(e) => {
+                tracing::warn!("Failed to read original file content: {}", e);
+                original_raw_content.clone()
+            }
+        }
+    } else {
+        original_raw_content.clone()
+    };
+    
+    // Create the entire modified file content by replacing the modified section in the original file
+    let entire_modified_content = if file_path.exists() {
+        match std::fs::read_to_string(file_path) {
+            Ok(content) => {
+                // If we're doing a str_replace, replace the original section with the modified section
+                if let Some(pos) = content.find(&original_raw_content) {
+                    let mut modified_content = content.clone();
+                    modified_content.replace_range(pos..(pos + original_raw_content.len()), &modified_raw_content);
+                    modified_content
+                } else {
+                    // If we can't find the exact section, just use the modified content
+                    modified_raw_content.clone()
+                }
+            },
+            Err(e) => {
+                tracing::warn!("Failed to read original file content: {}", e);
+                modified_raw_content.clone()
+            }
+        }
+    } else {
+        modified_raw_content.clone()
+    };
+    
+    // Prepare the data for the async task
+    let file_path_clone = file_path.to_path_buf();
+    
+    // Use the current runtime handle to spawn a task
+    // This is a fire-and-forget operation that won't create a new runtime
+    let rt = match tokio::runtime::Handle::try_current() {
+        Ok(handle) => handle,
+        Err(e) => {
+            tracing::error!("Failed to get tokio runtime handle: {}", e);
+            return Err(eyre!("Failed to get tokio runtime handle: {}", e));
+        }
+    };
+    
+    // Create a channel to receive the result
+    let (tx, rx) = std::sync::mpsc::channel();
+    
+    std::thread::spawn(move || {
+        let result = rt.block_on(async {
+            super::vscode_integration::send_clean_diff_to_vscode(
+                &entire_original_content,
+                &entire_modified_content,
+                &file_path_clone
+            ).await
+        });
+        let _ = tx.send(result);
+    });
+    
+    // Wait for the result with a timeout
+    match rx.recv_timeout(std::time::Duration::from_secs(5)) {
+        Ok(result) => result,
+        Err(e) => Err(eyre!("Failed to send clean diff to VSCode: {}", e)),
+    }
+}
+
+/// Extracts raw content from a StylizedFile by removing ASCII formatting characters
+fn extract_raw_content(stylized_file: &StylizedFile) -> String {
+    if !stylized_file.truecolor {
+        // If not using truecolor, the content is already clean
+        return stylized_file.content.clone();
+    }
+    
+    // Use strip-ansi-escapes to remove ANSI escape sequences
+    let bytes = strip_ansi_escapes::strip(&stylized_file.content);
+    match String::from_utf8(bytes) {
+        Ok(clean_content) => clean_content,
+        Err(e) => {
+            // Fallback to lossy conversion if UTF-8 conversion fails
+            tracing::warn!("Failed to convert stripped content to UTF-8: {}", e);
+            String::from_utf8_lossy(e.as_bytes()).to_string()
+        }
+    }
+}
+
+/// Helper function to get the current file path from context
+fn get_current_file_path() -> Option<std::path::PathBuf> {
+    // Check if we're in VSCode and have a file path from environment variables
+    if let Ok(file_path) = std::env::var("VSCODE_CWD") {
+        // If we have a VSCODE_CWD, we might be operating on a file in that directory
+        let path = std::path::PathBuf::from(file_path);
+        tracing::debug!("Found VSCODE_CWD: {:?}", path);
+        return Some(path);
+    }
+    
+    // Check if we have a file path from the current working directory
+    if let Ok(cwd) = std::env::current_dir() {
+        tracing::debug!("Using current working directory as file path: {:?}", cwd);
+        return Some(cwd);
+    }
+    
+    // Fallback to None if we can't determine a file path
+    None
 }
 
 /// Returns a 1-indexed line number range of the start and end of `needle` inside `file`.

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as WebSocket from "ws";
+import { DiffViewHandler } from "./diffView";
 
 export function activate(context: vscode.ExtensionContext) {
   // Command to open Amazon Q CLI terminal
@@ -8,7 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       vscode.commands
         .executeCommand("workbench.action.terminal.new", {
-          cwd: "/Volumes/workplace/github/amazon-q-developer-cli",
+          cwd: "/Users/laileni/Desktop/Q/amazon-q-developer-cli",
           name: "Amazon Q CLI",
         })
         .then(() => {
@@ -63,11 +64,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  let sendDiffViewDisposable =vscode.commands.registerCommand("amazonq.showDiffView", () => {
+      vscode.window.showInformationMessage("Use Amazon Q CLI to see clean diff views");
+    })
+
   // Register all commands
   context.subscriptions.push(
     openTerminalDisposable,
     sendActiveFileDisposable,
-    sendSelectedCodeDisposable
+    sendSelectedCodeDisposable,
+    sendDiffViewDisposable
   );
 
   // Auto-send on file change
@@ -268,7 +274,30 @@ function connectWebSocket() {
 
   ws.on("message", (data) => {
     console.log("Received from Q CLI:", data.toString());
+    
+    try {
+      const message = JSON.parse(data.toString());
+      
+      // Handle JSON-RPC messages
+      if (message.jsonrpc === "2.0" && message.method) {
+        handleJsonRpcMessage(message);
+      }
+    } catch (error) {
+      console.error("Error parsing WebSocket message:", error);
+    }
   });
+}
+
+// Handle JSON-RPC messages from the CLI
+function handleJsonRpcMessage(message: any) {
+  const { method, params } = message;
+  
+  if (method === "file_modification" && params) {
+    if (params.type === "clean_diff_view") {
+      // Handle clean diff view request
+      DiffViewHandler.handleCleanDiffRequest(params);
+    }
+  }
 }
 
 function sendEditorStateUpdate(editor: vscode.TextEditor) {
