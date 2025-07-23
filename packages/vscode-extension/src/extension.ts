@@ -7,29 +7,19 @@ export function activate(context: vscode.ExtensionContext) {
   let openTerminalDisposable = vscode.commands.registerCommand(
     "amazonq.openCLI",
     () => {
-      vscode.commands
-        .executeCommand("workbench.action.terminal.new", {
-          cwd: "/Volumes/workplace/github/amazon-q-developer-cli",
-          name: "Kiro Code",
-        })
-        .then(() => {
-          // Move terminal to editor area first
-          vscode.commands
-            .executeCommand("workbench.action.terminal.moveToEditor")
-            .then(() => {
-              // Wait a bit then move terminal to the right
-              setTimeout(() => {
-                vscode.commands.executeCommand(
-                  "workbench.action.moveEditorToRightGroup"
-                );
-              }, 100);
-            });
-          // Send command to terminal
-          const terminal = vscode.window.activeTerminal;
-          if (terminal) {
-            terminal.sendText("./target/release/chat_cli");
-          }
-        });
+      // Create terminal with proper name
+      const terminal = vscode.window.createTerminal({
+        cwd: "/Volumes/workplace/github/amazon-q-developer-cli",
+        name: "Kiro Code",
+        location: { viewColumn: vscode.ViewColumn.Beside },
+        iconPath: vscode.Uri.file(context.extensionPath + "/src/kiro.svg"),
+      });
+
+      // Show the terminal
+      terminal.show();
+
+      // Send command to terminal
+      terminal.sendText("./target/release/chat_cli");
     }
   );
 
@@ -62,9 +52,14 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  let sendDiffViewDisposable =vscode.commands.registerCommand("amazonq.showDiffView", () => {
-      vscode.window.showInformationMessage("Use Amazon Q CLI to see clean diff views");
-    })
+  let sendDiffViewDisposable = vscode.commands.registerCommand(
+    "amazonq.showDiffView",
+    () => {
+      vscode.window.showInformationMessage(
+        "Use Amazon Q CLI to see clean diff views"
+      );
+    }
+  );
 
   // Register all commands
   context.subscriptions.push(
@@ -272,10 +267,10 @@ function connectWebSocket() {
 
   ws.on("message", (data) => {
     console.log("Received from Q CLI:", data.toString());
-    
+
     try {
       const message = JSON.parse(data.toString());
-      
+
       // Handle JSON-RPC messages
       if (message.jsonrpc === "2.0" && message.method) {
         handleJsonRpcMessage(message);
@@ -289,7 +284,7 @@ function connectWebSocket() {
 // Handle JSON-RPC messages from the CLI
 function handleJsonRpcMessage(message: any) {
   const { method, params } = message;
-  
+
   if (method === "file_modification" && params) {
     if (params.type === "clean_diff_view") {
       // Handle clean diff view request

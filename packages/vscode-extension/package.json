@@ -18,7 +18,7 @@
       {
         "command": "amazonq.openCLI",
         "title": "Open Kiro Code",
-        "icon": "$(terminal)"
+        "icon": "./src/kiro.svg"
       },
       {
         "command": "amazonq.sendActiveFile",
