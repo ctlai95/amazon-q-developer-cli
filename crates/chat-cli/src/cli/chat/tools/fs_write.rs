@@ -509,6 +509,8 @@ fn print_diff(
     start_line: usize,
 ) -> Result<()> {
     // Try to use VSCode integration first if the file path is available
+    let mut show_terminal_diff = true;
+    
     if let Some(file_path) = get_current_file_path() {
         // Check if VSCode integration is available using a non-blocking approach
         let vscode_available = tokio::task::block_in_place(|| {
@@ -536,19 +538,23 @@ fn print_diff(
             if let Err(e) = send_clean_diff_to_vscode(old_str, new_str, &file_path) {
                 writeln!(output, "Failed to send clean diff to VSCode: {}", e)?;
                 tracing::error!("Failed to send clean diff to VSCode: {}", e);
+                
+                // Show terminal diff as fallback only if VSCode diff failed
+                writeln!(output, "Showing terminal diff as fallback:")?;
             } else {
                 writeln!(output, "Clean diff view sent to VSCode without ASCII formatting.")?;
+                // Successfully sent to VSCode, don't show terminal diff
+                show_terminal_diff = false;
             }
-            
-            // We'll still show the terminal diff as a fallback
-            writeln!(output, "Showing terminal diff as well for reference:")?;
         } else {
             writeln!(output, "VSCode integration not available. Using terminal diff...")?;
         }
     }
 
-    // Show terminal diff
-    print_terminal_diff(output, old_str, new_str, start_line)?;
+    // Only show terminal diff if VSCode integration is not available or failed
+    if show_terminal_diff {
+        print_terminal_diff(output, old_str, new_str, start_line)?;
+    }
 
     Ok(())
 }

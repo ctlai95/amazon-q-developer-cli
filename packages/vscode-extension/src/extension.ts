@@ -263,7 +263,7 @@ function connectWebSocket() {
   });
 
   ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
+    // console.error("WebSocket error:", error);
     ws = null;
   });
 
