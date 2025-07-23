@@ -17,7 +17,7 @@
     "commands": [
       {
         "command": "amazonq.openCLI",
-        "title": "Open Amazon Q CLI",
+        "title": "Open Kiro Code",
         "icon": "$(terminal)"
       },
       {
