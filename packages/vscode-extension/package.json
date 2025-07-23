@@ -17,8 +17,8 @@
     "commands": [
       {
         "command": "amazonq.openCLI",
-        "title": "Open Kiro Code",
-        "icon": "./src/kiro.svg"
+        "title": "Open CLIDE",
+        "icon": "./src/icon.svg"
       },
       {
         "command": "amazonq.sendActiveFile",
