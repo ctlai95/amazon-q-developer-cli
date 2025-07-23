@@ -1021,13 +1021,13 @@ impl ToolManager {
 
         Ok(match value.name.as_str() {
             "fs_read" => Tool::FsRead(serde_json::from_value::<FsRead>(value.args).map_err(map_err)?),
-            "fs_write" => Tool::FsWrite(serde_json::from_value::<FsWrite>(value.args).map_err(map_err)?),
+            "fsWrite" => Tool::FsWrite(serde_json::from_value::<FsWrite>(value.args).map_err(map_err)?),
             #[cfg(windows)]
             "execute_cmd" => {
                 Tool::ExecuteCommand(serde_json::from_value::<ExecuteCommand>(value.args).map_err(map_err)?)
             },
             #[cfg(not(windows))]
-            "execute_bash" => {
+            "executeBash" => {
                 Tool::ExecuteCommand(serde_json::from_value::<ExecuteCommand>(value.args).map_err(map_err)?)
             },
             "use_aws" => Tool::UseAws(serde_json::from_value::<UseAws>(value.args).map_err(map_err)?),
