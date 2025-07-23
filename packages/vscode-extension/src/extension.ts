@@ -9,8 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
     () => {
       // Create terminal with proper name
       const terminal = vscode.window.createTerminal({
-        cwd: "/Volumes/workplace/github/amazon-q-developer-cli",
-        name: "Kiro Code",
+        cwd: "/Users/laileni/Desktop/Q/Kiro-Code", // Name Repo accordingly
+        name: "Amazon Q CLI",
         location: { viewColumn: vscode.ViewColumn.Beside },
         iconPath: vscode.Uri.file(context.extensionPath + "/src/kiro.svg"),
       });
