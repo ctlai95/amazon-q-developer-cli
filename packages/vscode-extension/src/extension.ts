@@ -228,6 +228,11 @@ function sendSelectedCodeToCli() {
   }
 
   const filePath = activeEditor.document.fileName;
+  // Ignore files with paths starting with /var
+  if (filePath.startsWith("/var")) {
+    console.log("Ignoring selected code from /var path:", filePath);
+    return;
+  }
   const selection = activeEditor.selection;
   const selectedText = activeEditor.document.getText(selection);
   const startLine = selection.start.line + 1;
@@ -308,6 +313,12 @@ function sendEditorStateUpdate(editor: vscode.TextEditor) {
   const relativePath = workspaceFolder
     ? vscode.workspace.asRelativePath(editor.document.uri)
     : editor.document.fileName;
+
+  // Ignore files with paths starting with /var
+  if (relativePath.startsWith("/var") || editor.document.fileName.startsWith("/var")) {
+    console.log("Ignoring file with /var path:", editor.document.fileName);
+    return;
+  }
 
   const message = {
     jsonrpc: "2.0",
